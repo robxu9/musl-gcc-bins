@@ -1,0 +1,72 @@
+name: build-musl-gcc-bins
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  step1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          repository: richfelker/musl-cross-make
+          path: musl-cross-make
+      - name: install apt packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq build-essential gpg
+      - name: build
+        run: ./build.sh step1
+        shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          name: step1-build
+          path: musl-cross-make/output/
+  final:
+    runs-on: ubuntu-latest
+    needs: step1
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          repository: richfelker/musl-cross-make
+          path: musl-cross-make
+      - name: install apt packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq build-essential gpg
+      - uses: actions/download-artifact@v2
+        with:
+          name: step1-build
+          path: step1-output
+      - name: build
+        run: ./build.sh final step1-output
+        shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          name: final-build
+          path: musl-cross-make/output/
+  release:
+    needs: final
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: final-build
+          path: musl-gcc-bins
+      - name: generate changelog
+        run: "musl-gcc-bins/bin/x86_64-linux-musl-gcc -v > NOTES.txt"
+      - name: tar up the artifacts
+        run: "tar -cJf musl-gcc-bins.tar.xz musl-gcc-bins"
+      - name: create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: musl-gcc-bins.tar.xz
+          body_path: NOTES.txt
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

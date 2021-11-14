@@ -53,7 +53,7 @@ jobs:
       - name: untar downloaded artifacts
         run: "tar xf build-out.tar.xz && mv output step1-output && rm build-out.tar.xz"
       - name: build
-        run: ./build.sh final step1-output
+        run: ./build.sh final ${{matrix.targets}} step1-output
         shell: bash
       - name: tar-results
         run: "mv -v musl-cross-make/output musl-gcc-bins-${{matrix.targets}} && tar -cJf musl-gcc-bins-${{matrix.targets}}.tar.xz musl-gcc-bins-${{matrix.targets}}"

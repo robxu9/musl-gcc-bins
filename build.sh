@@ -11,7 +11,7 @@ sed -i s/__TARGET__/$2/g musl-cross-make/config.mak
 
 # if we have a previous toolchain, set it in the path
 if [ ! -z $3 ]; then
-  export PATH="$(realpath $3):$PATH"
+  export PATH="$(realpath $3)/bin:$PATH"
 fi
 
 # kickoff the build

@@ -20,10 +20,12 @@ jobs:
       - name: build
         run: ./build.sh step1
         shell: bash
+      - name: tar-results
+        run: "tar -cJf build-out.tar.xz -C musl-cross-make output"
       - uses: actions/upload-artifact@v2
         with:
           name: step1-build
-          path: musl-cross-make/output/
+          path: build-out.tar.xz
   final:
     runs-on: ubuntu-latest
     needs: step1
@@ -40,14 +42,17 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: step1-build
-          path: step1-output
+      - name: untar downloaded artifacts
+        run: "tar xf build-out.tar.xz && mv output step1-output && rm build-out.tar.xz"
       - name: build
         run: ./build.sh final step1-output
         shell: bash
+      - name: tar-results
+        run: "tar -cJf build-out.tar.xz -C musl-cross-make output"
       - uses: actions/upload-artifact@v2
         with:
           name: final-build
-          path: musl-cross-make/output/
+          path: build-out.tar.xz
   release:
     needs: final
     if: startsWith(github.ref, 'refs/tags/')
@@ -57,7 +62,8 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: final-build
-          path: musl-gcc-bins
+      - name: untar downloaded artifacts
+        run: "tar xf build-out.tar.xz && mv output musl-gcc-bins && rm build-out.tar.xz"
       - name: generate changelog
         run: "musl-gcc-bins/bin/x86_64-linux-musl-gcc -v > NOTES.txt"
       - name: tar up the artifacts

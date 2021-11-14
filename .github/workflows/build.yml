@@ -39,6 +39,8 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -qq build-essential gpg
+      - name: Docker Setup QEMU
+        uses: docker/setup-qemu-action@v1.2.0
       - uses: actions/download-artifact@v2
         with:
           name: step1-build

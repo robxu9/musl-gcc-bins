@@ -2,7 +2,6 @@
 # config.mak
 #
 
-TARGET = x86_64-linux-musl
-TARGET = aarch64-linux-musl
+TARGET = __TARGET__
 
 COMMON_CONFIG += CFLAGS="-g0 -Os" CXXFLAGS="-g0 -Os" LDFLAGS="-s"

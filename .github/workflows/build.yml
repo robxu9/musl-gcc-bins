@@ -7,6 +7,9 @@ on:
 jobs:
   step1:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        targets: [x86_64-linux-musl, aarch64-linux-musl]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/checkout@v2
@@ -18,17 +21,20 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -qq build-essential gpg
       - name: build
-        run: ./build.sh step1
+        run: ./build.sh step1 ${{matrix.targets}}
         shell: bash
       - name: tar-results
         run: "tar -cJf build-out.tar.xz -C musl-cross-make output"
       - uses: actions/upload-artifact@v2
         with:
-          name: step1-build
+          name: step1-build-${{matrix.targets}}
           path: build-out.tar.xz
   final:
     runs-on: ubuntu-latest
     needs: step1
+    strategy:
+      matrix:
+        targets: [x86_64-linux-musl, aarch64-linux-musl]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/checkout@v2
@@ -43,18 +49,18 @@ jobs:
         uses: docker/setup-qemu-action@v1.2.0
       - uses: actions/download-artifact@v2
         with:
-          name: step1-build
+          name: step1-build-${{matrix.targets}}
       - name: untar downloaded artifacts
         run: "tar xf build-out.tar.xz && mv output step1-output && rm build-out.tar.xz"
       - name: build
         run: ./build.sh final step1-output
         shell: bash
       - name: tar-results
-        run: "tar -cJf build-out.tar.xz -C musl-cross-make output"
+        run: "mv -v musl-cross-make/output musl-gcc-bins-${{matrix.targets}} && tar -cJf musl-gcc-bins-${{matrix.targets}}.tar.xz musl-gcc-bins-${{matrix.targets}}"
       - uses: actions/upload-artifact@v2
         with:
-          name: final-build
-          path: build-out.tar.xz
+          name: final-build-${{matrix.targets}}
+          path: musl-gcc-bins-${{matrix.targets}}.tar.xz
   release:
     needs: final
     if: startsWith(github.ref, 'refs/tags/')
@@ -63,17 +69,18 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: final-build
-      - name: untar downloaded artifacts
-        run: "tar xf build-out.tar.xz && mv output musl-gcc-bins && rm build-out.tar.xz"
+          name: final-build-x86_64-linux-musl
+      - uses: actions/download-artifact@v2
+        with:
+          name: final-build-aarch64-linux-musl
+      - name: untar x86_64 for downloading
+        run: "tar xf musl-gcc-bins-x86_64-linux-musl.tar.xz"
       - name: generate changelog
-        run: "musl-gcc-bins/bin/x86_64-linux-musl-gcc -v > NOTES.txt"
-      - name: tar up the artifacts
-        run: "tar -cJf musl-gcc-bins.tar.xz musl-gcc-bins"
+        run: "musl-gcc-bins-x86_64-linux-musl/bin/x86_64-linux-musl-gcc -v > NOTES.txt"
       - name: create release
         uses: softprops/action-gh-release@v1
         with:
-          files: musl-gcc-bins.tar.xz
+          files: musl-gcc-bins-*.tar.xz
           body_path: NOTES.txt
           fail_on_unmatched_files: true
         env:

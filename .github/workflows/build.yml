@@ -5,7 +5,7 @@ on:
   - pull_request
 
 jobs:
-  step1:
+  cross:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,17 +21,17 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -qq build-essential gpg
       - name: build
-        run: ./build.sh step1 ${{matrix.targets}}
+        run: ./build.sh ${{matrix.targets}}
         shell: bash
       - name: tar-results
-        run: "tar -cJf build-out.tar.xz -C musl-cross-make output"
+        run: "mv -v musl-cross-make/output cross-${{matrix.targets}} && tar -cJf cross-${{matrix.targets}}.tar.xz cross-${{matrix.targets}}"
       - uses: actions/upload-artifact@v2
         with:
-          name: step1-build-${{matrix.targets}}
-          path: build-out.tar.xz
-  final:
+          name: cross-${{matrix.targets}}
+          path: cross-${{matrix.targets}}.tar.xz
+  native:
     runs-on: ubuntu-latest
-    needs: step1
+    needs: cross
     strategy:
       matrix:
         targets: [x86_64-linux-musl, aarch64-linux-musl]
@@ -49,38 +49,37 @@ jobs:
         uses: docker/setup-qemu-action@v1.2.0
       - uses: actions/download-artifact@v2
         with:
-          name: step1-build-${{matrix.targets}}
+          name: cross-${{matrix.targets}}
       - name: untar downloaded artifacts
-        run: "tar xf build-out.tar.xz && mv output step1-output && rm build-out.tar.xz"
+        run: "tar xf cross-${{matrix.targets}}.tar.xz"
       - name: build
-        run: ./build.sh final ${{matrix.targets}} step1-output
+        run: ./build.sh ${{matrix.targets}} cross-${{matrix.targets}}
         shell: bash
       - name: tar-results
-        run: "mv -v musl-cross-make/output musl-gcc-bins-${{matrix.targets}} && tar -cJf musl-gcc-bins-${{matrix.targets}}.tar.xz musl-gcc-bins-${{matrix.targets}}"
+        run: "mv -v musl-cross-make/output native-${{matrix.targets}} && tar -cJf native-${{matrix.targets}}.tar.xz native-${{matrix.targets}}"
       - uses: actions/upload-artifact@v2
         with:
-          name: final-build-${{matrix.targets}}
-          path: musl-gcc-bins-${{matrix.targets}}.tar.xz
+          name: native-${{matrix.targets}}
+          path: native-${{matrix.targets}}.tar.xz
   release:
-    needs: final
+    needs: [cross, native]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
-        with:
-          name: final-build-x86_64-linux-musl
-      - uses: actions/download-artifact@v2
-        with:
-          name: final-build-aarch64-linux-musl
-      - name: untar x86_64 for downloading
-        run: "tar xf musl-gcc-bins-x86_64-linux-musl.tar.xz"
-      - name: generate changelog
-        run: "musl-gcc-bins-x86_64-linux-musl/bin/x86_64-linux-musl-gcc -v > NOTES.txt"
+      - name: generate changelog by just dumping gcc -V for all built binaries
+        run: |
+          for res in *.tar.xz; do
+            echo "$res:"
+            dir=$(mktemp -d)
+            tar xf $res -C $dir --strip-components=1
+            $dir/bin/*-gcc -v >> NOTES.txt
+          done
       - name: create release
         uses: softprops/action-gh-release@v1
         with:
-          files: musl-gcc-bins-*.tar.xz
+          files: "*.tar.xz"
           body_path: NOTES.txt
           fail_on_unmatched_files: true
         env:

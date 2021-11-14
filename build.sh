@@ -7,7 +7,7 @@ set -e
 
 # copy the config
 cp -v config.mak.$1 musl-cross-make/config.mak
-sed -i s/__TARGET__/$2/ musl-cross-make/config.mak
+sed -i s/__TARGET__/$2/g musl-cross-make/config.mak
 
 # if we have a previous toolchain, set it in the path
 if [ ! -z $3 ]; then

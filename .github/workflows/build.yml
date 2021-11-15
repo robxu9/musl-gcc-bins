@@ -68,9 +68,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
+        with:
+          path: artifacts
       - name: generate changelog by just dumping gcc -V for all built binaries
         run: |
-          for res in *.tar.xz; do
+          for res in artifacts/*/*.tar.xz; do
             echo "$res:"
             dir=$(mktemp -d)
             tar xf $res -C $dir --strip-components=1
@@ -79,7 +81,7 @@ jobs:
       - name: create release
         uses: softprops/action-gh-release@v1
         with:
-          files: "*.tar.xz"
+          files: "artifacts/*/*.tar.xz"
           body_path: NOTES.txt
           fail_on_unmatched_files: true
         env:

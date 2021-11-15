@@ -107,7 +107,7 @@ jobs:
             echo "$res:"
             dir=$(mktemp -d)
             tar xf $res -C $dir --strip-components=1
-            $dir/bin/*-gcc -v >> NOTES.txt
+            $dir/bin/*-gcc -v 2>&1 >> NOTES.txt
           done
       - name: create release
         uses: softprops/action-gh-release@v1

@@ -22,3 +22,7 @@ else
   make
 fi
 make install
+
+# fix broken /libc.so symlink
+rm -v output/$1/lib/ld-musl-${1%%-*}.so.1
+ln -sv libc.so output/$1/lib/ld-musl-${1%%-*}.so.1

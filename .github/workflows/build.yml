@@ -26,7 +26,7 @@ jobs:
         id: cache
         with:
           path: cross-${{matrix.targets}}.tar.xz
-          key: cross-${{matrix.targets}}-${{steps.get-version.outputs.version}}
+          key: cross-${{matrix.targets}}-${{steps.get-version.outputs.version}}-${{hashFiles('build.sh','config.mak')}}
       - name: install apt packages
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -65,7 +65,7 @@ jobs:
         id: cache
         with:
           path: native-${{matrix.targets}}.tar.xz
-          key: native-${{matrix.targets}}-${{steps.get-version.outputs.version}}
+          key: native-${{matrix.targets}}-${{steps.get-version.outputs.version}}-${{hashFiles('build.sh','config.mak')}}
       - name: install apt packages
         if: steps.cache.outputs.cache-hit != 'true'
         run: |

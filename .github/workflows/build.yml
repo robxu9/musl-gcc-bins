@@ -39,7 +39,7 @@ jobs:
       - name: tar-results
         if: steps.cache.outputs.cache-hit != 'true'
         run: "mv -v musl-cross-make/output cross-${{matrix.targets}} && tar -cJf cross-${{matrix.targets}}.tar.xz cross-${{matrix.targets}}"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: cross-${{matrix.targets}}
           path: cross-${{matrix.targets}}.tar.xz
@@ -88,7 +88,7 @@ jobs:
       - name: tar-results
         if: steps.cache.outputs.cache-hit != 'true'
         run: "mv -v musl-cross-make/output native-${{matrix.targets}} && tar -cJf native-${{matrix.targets}}.tar.xz native-${{matrix.targets}}"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: native-${{matrix.targets}}
           path: native-${{matrix.targets}}.tar.xz

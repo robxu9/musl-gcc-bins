@@ -74,7 +74,7 @@ jobs:
       - name: Docker Setup QEMU
         if: steps.cache.outputs.cache-hit != 'true'
         uses: docker/setup-qemu-action@v1.2.0
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         if: steps.cache.outputs.cache-hit != 'true'
         with:
           name: cross-${{matrix.targets}}
@@ -98,7 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           path: artifacts
       - name: generate changelog by just dumping gcc -V for all built binaries

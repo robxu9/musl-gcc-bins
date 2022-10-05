@@ -22,7 +22,7 @@ jobs:
           echo "::set-output name=version::$(git rev-parse HEAD)"
         shell: bash
         working-directory: musl-cross-make
-      - uses: actions/cache@v3.0.4
+      - uses: actions/cache@v3.0.10
         id: cache
         with:
           path: cross-${{matrix.targets}}.tar.xz
@@ -61,7 +61,7 @@ jobs:
           echo "::set-output name=version::$(git rev-parse HEAD)"
         shell: bash
         working-directory: musl-cross-make
-      - uses: actions/cache@v3.0.4
+      - uses: actions/cache@v3.0.10
         id: cache
         with:
           path: native-${{matrix.targets}}.tar.xz

@@ -19,7 +19,7 @@ jobs:
       - name: get musl-cross-make version
         id: get-version
         run: |
-          echo "::set-output name=version::$(git rev-parse HEAD)"
+          echo "version=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         shell: bash
         working-directory: musl-cross-make
       - uses: actions/cache@v3.3.1
@@ -58,7 +58,7 @@ jobs:
       - name: get musl-cross-make version
         id: get-version
         run: |
-          echo "::set-output name=version::$(git rev-parse HEAD)"
+          echo "version=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         shell: bash
         working-directory: musl-cross-make
       - uses: actions/cache@v3.3.1
